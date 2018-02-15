@@ -50,8 +50,8 @@ class Section:
     #     return
 
     def add_question(self):
-        time.sleep(0.5)
         print(self.index)
+        time.sleep(0.5)
         self.driver.find_elements(
             By.XPATH, "//div[@class='freebirdFormeditorViewPagePageCard']")[self.index].click()
         time.sleep(0.5)
@@ -61,7 +61,6 @@ class Section:
             self.questions[0] = Question(QuestionType.MULTIPLE_CHOICE)
         else:
             self.questions[max(self.questions.keys()) + 1] = Question(QuestionType.MULTIPLE_CHOICE)
-        print(self.questions)
         return
 
     def count_previous(self):
@@ -87,14 +86,12 @@ class Section:
             By.XPATH, "//textarea[@aria-label='Question title']")[p_count + index]
         title.clear()
         title.send_keys(text)
-        print(self.questions)
         return
 
     def change_question_type(self, index, qtype):
         p_count = self.count_previous()
         self.click_question(index, p_count)
         time.sleep(0.5)
-        print(p_count, index)
         self.driver.find_elements(
             By.XPATH, "//div[@aria-label='Question types']")[p_count + index].click()
         time.sleep(0.5)
@@ -112,7 +109,6 @@ class Section:
         for x in range(index, questionrange):
             self.questions[x] = self.questions[x + 1]
         self.questions.pop(questionrange)
-        print(self.questions)
         return
 
 
@@ -157,30 +153,27 @@ class GForm:
         return
 
     def edit_title(self, title):
-        time.sleep(.5)
+        time.sleep(0.5)
         form_title = self.driver.find_elements(By.XPATH, "//textarea[@aria-label='Form title']")[0]
         form_title.clear()
         form_title.send_keys(title)
         return
 
     def edit_description(self, description):
-        time.sleep(.5)
+        time.sleep(0.5)
         form_desc = self.driver.find_elements(
             By.XPATH, "//textarea[@aria-label='Form description']")[0]
         form_desc.send_keys(description)
         return
-
-    def delete_question(self, index):
-        self.driver.find_elements_by_class_name(
-            "freebirdFormeditorViewItemcardRoot")[index].click()
-        self.driver.find_elements(By.XPATH, "//div[@data-tooltip='Delete']")[index].click()
 
     def load_blank_template(self, title, description):
         templates = self.driver.find_elements_by_class_name(
             "docs-homescreen-templates-templateview-showcase")
         templates[0].click()
         self.waitfor(By.CLASS_NAME, "docssharedWizOmnilistMorselValue", self.TIMEOUT)
-        self.delete_question(0)
+        self.driver.find_elements_by_class_name(
+            "freebirdFormeditorViewItemcardRoot")[index].click()
+        self.driver.find_elements(By.XPATH, "//div[@data-tooltip='Delete']")[index].click()
         self.edit_title(title)
         self.edit_description(description)
         self.sections[0] = Section(self.driver, 0, self)
@@ -188,6 +181,14 @@ class GForm:
         return
 
     def add_section(self):
+        time.sleep(0.5)
+        if(self.questions_per[max(self.sections.keys())] > 0):
+            s_prev = self.sections[max(self.sections.keys())].count_previous()
+            self.sections[max(self.sections.keys())].click_question(
+                self.questions_per[max(self.sections.keys())] - 1, s_prev)
+        else:
+            self.driver.find_elements(
+                By.XPATH, "//div[@class='freebirdFormeditorViewPagePageCard']")[max(self.sections.keys())].click()
         time.sleep(0.5)
         self.driver.find_element(By.XPATH, "//div[@data-tooltip='Add section']").click()
         self.sections[max(self.sections.keys()) + 1] = Section(self.driver,
@@ -199,7 +200,7 @@ class GForm:
         time.sleep(0.5)
         self.driver.find_elements(
             By.XPATH, "//div[@aria-label='Overflow Menu']")[index].click()
-        time.sleep(.5)
+        time.sleep(0.5)
         self.driver.find_element(By.XPATH, "//div[@data-action-id='freebird-delete-page']").click()
         sectionrange = max(self.sections.keys())
         for x in range(index + 1, sectionrange):
@@ -210,16 +211,25 @@ class GForm:
 if __name__ == '__main__':
     TESTFORM = GForm("***REMOVED***", "***REMOVED***")
     TESTFORM.load_blank_template("NICE MEME", "this is a test")
-    TESTFORM.add_section()
-    TESTFORM.delete_section(1)
-    TESTFORM.add_section()
-    TESTFORM.add_section()
-    TESTFORM.delete_section(1)
-    TESTFORM.sections[0].add_question()
-    TESTFORM.sections[0].delete_question(0)
-    TESTFORM.sections[0].add_question()
-    TESTFORM.sections[1].add_question()
-    TESTFORM.sections[1].change_question(0, "yeah")
-    TESTFORM.sections[1].change_question_type(0, QuestionType.CHECKBOXES)
-    TESTFORM.sections[0].add_question()
-    TESTFORM.sections[0].change_question_type(0, QuestionType.TIME)
+    # TESTFORM.add_section()
+    # TESTFORM.delete_section(1)
+    TESTFORM.add_section()  # add sec2
+    # TESTFORM.add_section()
+    # TESTFORM.delete_section(1)
+    # TESTFORM.sections[0].add_question()
+    # TESTFORM.sections[0].delete_question(0)
+    time.sleep(3)
+    TESTFORM.sections[0].add_question()  # add question to Sec1
+    TESTFORM.sections[1].add_question()  # add question to sec2
+    TESTFORM.sections[1].change_question(0, "yeah")  # change question1 sec2 to yeah
+    TESTFORM.sections[1].change_question_type(0, QuestionType.CHECKBOXES)  # change q1 sec2 to chk
+    time.sleep(3)
+    TESTFORM.sections[0].add_question()  # add question to sec1
+    TESTFORM.sections[0].change_question_type(0, QuestionType.TIME)  # change q1 sec1 to time
+    time.sleep(3)
+    TESTFORM.add_section()  # add s3
+    time.sleep(3)
+    TESTFORM.sections[2].add_question()  # add q1 to s3
+    time.sleep(3)
+    TESTFORM.sections[2].change_question_type(
+        0, QuestionType.LINEAR_SCALE)  # change s3 q1 to linear scale
