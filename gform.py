@@ -253,7 +253,7 @@ class GForm:
         self.sections.pop(sectionrange)
         return
 
-    def quit():
+    def quit(self):
         self.driver.quit()
         return
 
