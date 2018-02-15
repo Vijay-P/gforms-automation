@@ -27,7 +27,7 @@ class Question:
 
     def __init__(self, qtype):
         self.type = qtype
-        pass
+        return
 
 
 class Section:
@@ -39,21 +39,18 @@ class Section:
         self.index = index
         self.parent = parent
 
-    def waitfor(self, selector, string, secs):
-        try:
-            WebDriverWait(self.driver, secs).until(
-                EC.visibility_of_element_located((selector, string))
-            )
-        except TimeoutException as ex:
-            print("Exception has been thrown. " + str(ex))
-            self.driver.quit()
-        return
+    # def waitfor(self, selector, string, secs):
+    #     try:
+    #         WebDriverWait(self.driver, secs).until(
+    #             EC.visibility_of_element_located((selector, string))
+    #         )
+    #     except TimeoutException as ex:
+    #         print("Exception has been thrown. " + str(ex))
+    #         self.driver.quit()
+    #     return
 
     def add_question(self):
-        # self.waitfor(
-        # By.XPATH, "(//div[@class='freebirdFormeditorViewPagePageCard'])[" +
-        # str(self.index) + "]", 2)
-        time.sleep(.5)
+        time.sleep(0.5)
         print(self.index)
         self.driver.find_elements(
             By.XPATH, "//div[@class='freebirdFormeditorViewPagePageCard']")[self.index].click()
