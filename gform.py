@@ -65,9 +65,9 @@ class Question:
         accept3 = self.type == QuestionType.DROPDOWN
         assert accept1 or accept2 or accept3
         assert isinstance(options, list)
-        self.parent.click_question(self.index, self.parent.count_previous())
+        self.click_question(self.parent.count_previous())
         time.sleep(0.5)
-        for opt, ndex in enumerate(options):
+        for ndex, opt in enumerate(options):
             if ndex > 0:
                 self.driver.find_element(By.XPATH, "//input[@aria-label='Add option']").click()
             option = self.driver.find_elements(
