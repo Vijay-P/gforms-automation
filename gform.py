@@ -32,20 +32,39 @@ class Question:
 
 class Section:
 
-    questions
+    questions = {}
 
     def __init__(self, driver, index, parent):
         self.driver = driver
         self.index = index
         self.parent = parent
 
+    def waitfor(self, selector, string, secs):
+        try:
+            WebDriverWait(self.driver, secs).until(
+                EC.visibility_of_element_located((selector, string))
+            )
+        except TimeoutException as ex:
+            print("Exception has been thrown. " + str(ex))
+            self.driver.quit()
+        return
+
     def add_question(self):
-        time.sleep(0.5)
+        # self.waitfor(
+        # By.XPATH, "(//div[@class='freebirdFormeditorViewPagePageCard'])[" +
+        # str(self.index) + "]", 2)
+        time.sleep(.5)
+        print(self.index)
         self.driver.find_elements(
             By.XPATH, "//div[@class='freebirdFormeditorViewPagePageCard']")[self.index].click()
         time.sleep(0.5)
         self.driver.find_element(By.XPATH, "//div[@data-tooltip='Add question']").click()
         self.parent.questions_per[self.index] += 1
+        if(len(self.questions.keys()) == 0):
+            self.questions[0] = Question(QuestionType.MULTIPLE_CHOICE)
+        else:
+            self.questions[max(self.questions.keys()) + 1] = Question(QuestionType.MULTIPLE_CHOICE)
+        print(self.questions)
         return
 
     def count_previous(self):
@@ -71,15 +90,19 @@ class Section:
             By.XPATH, "//textarea[@aria-label='Question title']")[p_count + index]
         title.clear()
         title.send_keys(text)
+        print(self.questions)
         return
 
     def change_question_type(self, index, qtype):
         p_count = self.count_previous()
         self.click_question(index, p_count)
         time.sleep(0.5)
-        self.driver.find_element(By.XPATH, "//div[@aria-label='Question types']").click()
+        print(p_count, index)
+        self.driver.find_elements(
+            By.XPATH, "//div[@aria-label='Question types']")[p_count + index].click()
         time.sleep(0.5)
-        self.driver.find_elements(By.XPATH, qtype.value)[1].click()
+        self.driver.find_elements(By.XPATH, qtype.value)[p_count + index + 1].click()
+        self.questions[index].type = qtype
         return
 
     def delete_question(self, index):
@@ -88,6 +111,11 @@ class Section:
         time.sleep(0.5)
         self.driver.find_element(By.XPATH, "//div[@data-tooltip='Delete']").click()
         self.parent.questions_per[self.index] -= 1
+        questionrange = max(self.questions.keys())
+        for x in range(index, questionrange):
+            self.questions[x] = self.questions[x + 1]
+        self.questions.pop(questionrange)
+        print(self.questions)
         return
 
 
