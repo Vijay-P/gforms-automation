@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+OP_WAIT = 0.5
+
 
 class QuestionType(Enum):
     SHORT_ANSWER = "//div[content='Short answer']"
@@ -33,7 +35,7 @@ class Question:
         return
 
     def click_question(self, prev):
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_elements(
             By.XPATH, "//div[@class='freebirdFormeditorViewItemContentWrapper']")[prev + self.index].click()
         return
@@ -41,7 +43,7 @@ class Question:
     def change_question(self, text):
         p_count = self.parent.count_previous()
         self.click_question(p_count)
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         title = self.driver.find_elements(
             By.XPATH, "//textarea[@aria-label='Question title']")[p_count + self.index]
         title.clear()
@@ -50,11 +52,12 @@ class Question:
 
     def change_question_type(self, qtype):
         p_count = self.parent.count_previous()
+        print("QUINDEX, PREV, CHANGE TYPE", self.index, p_count)
         self.click_question(p_count)
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_elements(
             By.XPATH, "//div[@aria-label='Question types']")[p_count + self.index].click()
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_elements(By.XPATH, qtype.value)[p_count + self.index + 1].click()
         self.type = qtype
         return
@@ -66,7 +69,7 @@ class Question:
         assert accept1 or accept2 or accept3
         assert isinstance(options, list)
         self.click_question(self.parent.count_previous())
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         for ndex, opt in enumerate(options):
             if ndex > 0:
                 self.driver.find_element(By.XPATH, "//input[@aria-label='Add option']").click()
@@ -75,13 +78,35 @@ class Question:
             option.click()
             option.clear()
             option.send_keys(opt)
-            time.sleep(0.5)
+            time.sleep(OP_WAIT)
+        return
 
     def set_grid_choices(self, rows, columns):
         pass
 
     def set_linear_scale(self, bottom, top, bottom_label="", top_label=""):
-        pass
+        assert bottom == 0 or bottom == 1
+        assert top > 1 and top < 11
+        assert isinstance(bottom_label, str)
+        assert isinstance(top_label, str)
+        time.sleep(OP_WAIT)
+        self.driver.find_element(
+            By.XPATH, "//div[@aria-label='Lower scale limit' and @data-value='1']").click()
+        time.sleep(OP_WAIT)
+        self.driver.find_elements(
+            By.XPATH, "//div[@aria-label='Lower scale limit' and @data-value='" + str(bottom) + "']")[1].click()
+        self.driver.find_element(
+            By.XPATH, "//div[@aria-label='Upper scale limit' and @data-value='5']").click()
+        time.sleep(OP_WAIT)
+        self.driver.find_elements(
+            By.XPATH, "//div[@aria-label='Upper scale limit' and @data-value='" + str(top) + "']")[1].click()
+        time.sleep(OP_WAIT)
+        self.driver.find_elements(
+            By.XPATH, "//input[@aria-label='Label (optional)']")[0].send_keys(bottom_label)
+        time.sleep(OP_WAIT)
+        self.driver.find_elements(
+            By.XPATH, "//input[@aria-label='Label (optional)']")[1].send_keys(top_label)
+        return
 
 
 class Section:
@@ -94,19 +119,19 @@ class Section:
         self.parent = parent
 
     def add_question(self):
-        print(self.index)
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_elements(
             By.XPATH, "//div[@class='freebirdFormeditorViewPagePageCard']")[self.index].click()
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_element(By.XPATH, "//div[@data-tooltip='Add question']").click()
         self.parent.questions_per[self.index] += 1
-        if not self.questions.keys():
-            self.questions[0] = Question(self.driver, self.index, self,
+        if len(self.questions.keys()) == 0:
+            self.questions[0] = Question(self.driver, 0, self,
                                          QuestionType.MULTIPLE_CHOICE)
         else:
             self.questions[max(self.questions.keys()) + 1] = Question(self.driver,
-                                                                      self.index, self, QuestionType.MULTIPLE_CHOICE)
+                                                                      max(self.questions.keys()) + 1, self, QuestionType.MULTIPLE_CHOICE)
+        print("ADDING QUESTION", max(self.questions.keys()))
         return
 
     def count_previous(self):
@@ -116,12 +141,13 @@ class Section:
                 pre += self.parent.questions_per[q_index]
             else:
                 break
+        print("QINDEX, PREV, COUNT", self.index, pre)
         return pre
 
     def delete_question(self, index):
         p_count = self.count_previous()
         self.questions[index].click_question(p_count)
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_element(By.XPATH, "//div[@data-tooltip='Delete']").click()
         self.parent.questions_per[self.index] -= 1
         questionrange = max(self.questions.keys())
@@ -162,7 +188,7 @@ class GForm:
         elem.clear()
         elem.send_keys(username)
         self.driver.find_element_by_id("identifierNext").click()
-        time.sleep(1)
+        time.sleep(OP_WAIT)
         self.waitfor(By.NAME, "password", self.TIMEOUT)
         elem = self.driver.find_element_by_name("password")
         elem.clear()
@@ -172,14 +198,14 @@ class GForm:
         return
 
     def edit_title(self, title):
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         form_title = self.driver.find_elements(By.XPATH, "//textarea[@aria-label='Form title']")[0]
         form_title.clear()
         form_title.send_keys(title)
         return
 
     def edit_description(self, description):
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         form_desc = self.driver.find_elements(
             By.XPATH, "//textarea[@aria-label='Form description']")[0]
         form_desc.send_keys(description)
@@ -200,7 +226,7 @@ class GForm:
         return
 
     def add_section(self):
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         if self.questions_per[max(self.sections.keys())] > 0:
             s_prev = self.sections[max(self.sections.keys())].count_previous()
             self.sections[max(self.sections.keys())].questions[self.questions_per[
@@ -208,7 +234,7 @@ class GForm:
         else:
             self.driver.find_elements(
                 By.XPATH, "//div[@class='freebirdFormeditorViewPagePageCard']")[max(self.sections.keys())].click()
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_element(By.XPATH, "//div[@data-tooltip='Add section']").click()
         self.sections[max(self.sections.keys()) + 1] = Section(self.driver,
                                                                max(self.sections.keys()) + 1, self)
@@ -216,10 +242,10 @@ class GForm:
         return
 
     def delete_section(self, index):
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_elements(
             By.XPATH, "//div[@aria-label='Overflow Menu']")[index].click()
-        time.sleep(0.5)
+        time.sleep(OP_WAIT)
         self.driver.find_element(By.XPATH, "//div[@data-action-id='freebird-delete-page']").click()
         sectionrange = max(self.sections.keys())
         for section in range(index + 1, sectionrange):
@@ -227,29 +253,21 @@ class GForm:
         self.sections.pop(sectionrange)
         return
 
+    def quit():
+        self.driver.quit()
+        return
+
 if __name__ == '__main__':
     TESTFORM = GForm("***REMOVED***", "***REMOVED***")
     TESTFORM.load_blank_template("NICE MEME", "this is a test")
-    # TESTFORM.add_section()
-    # TESTFORM.delete_section(1)
-    # TESTFORM.add_section()  # add sec2
-    # TESTFORM.add_section()
-    # TESTFORM.delete_section(1)
-    # TESTFORM.sections[0].add_question()
-    # TESTFORM.sections[0].delete_question(0)
-    # time.sleep(3)
     TESTFORM.sections[0].add_question()  # add question to Sec1
     TESTFORM.sections[0].questions[0].set_multiple_choices(["optiona", "optionb", "optionc"])
-    # TESTFORM.sections[1].add_question()  # add question to sec2
-    # TESTFORM.sections[1].change_question(0, "yeah")  # change question1 sec2 to yeah
-    # TESTFORM.sections[1].change_question_type(0, QuestionType.CHECKBOXES)  # change q1 sec2 to chk
-    # time.sleep(3)
-    # TESTFORM.sections[0].add_question()  # add question to sec1
-    # TESTFORM.sections[0].change_question_type(0, QuestionType.TIME)  # change q1 sec1 to time
-    # time.sleep(3)
-    # TESTFORM.add_section()  # add s3
-    # time.sleep(3)
-    # TESTFORM.sections[2].add_question()  # add q1 to s3
-    # time.sleep(3)
-    # TESTFORM.sections[2].change_question_type(
-    #     0, QuestionType.LINEAR_SCALE)  # change s3 q1 to linear scale
+    TESTFORM.sections[0].add_question()  # add question to Sec1
+    TESTFORM.sections[0].questions[1].change_question_type(QuestionType.LINEAR_SCALE)
+    TESTFORM.sections[0].questions[1].set_linear_scale(1, 10, "not at all", "yes, totally")
+    TESTFORM.sections[0].add_question()
+    TESTFORM.sections[0].questions[1].change_question_type(QuestionType.MULTIPLE_CHOICE_GRID)
+    TESTFORM.sections[0].questions[1].set_grid_choices(
+        ["1", "2", "3", "4", "5"], ["1", "2", "3", "4", "5"])
+    time.sleep(10)
+    TESTFORM.quit()
