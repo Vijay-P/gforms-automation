@@ -52,7 +52,6 @@ class Question:
 
     def change_question_type(self, qtype):
         p_count = self.parent.count_previous()
-        print("QUINDEX, PREV, CHANGE TYPE", self.index, p_count)
         self.click_question(p_count)
         time.sleep(OP_WAIT)
         self.driver.find_elements(
@@ -68,6 +67,7 @@ class Question:
         accept3 = self.type == QuestionType.DROPDOWN
         assert accept1 or accept2 or accept3
         assert isinstance(options, list)
+        time.sleep(OP_WAIT)
         self.click_question(self.parent.count_previous())
         time.sleep(OP_WAIT)
         for ndex, opt in enumerate(options):
@@ -82,9 +82,43 @@ class Question:
         return
 
     def set_grid_choices(self, rows, columns):
-        pass
+        accept1 = self.type == QuestionType.MULTIPLE_CHOICE_GRID
+        accept2 = self.type == QuestionType.CHECKBOX_GRID
+        assert accept1 or accept2
+        assert isinstance(rows, list)
+        assert isinstance(columns, list)
+        time.sleep(OP_WAIT)
+        self.click_question(self.parent.count_previous())
+        for ndex, row in enumerate(rows):
+            time.sleep(OP_WAIT)
+            if(ndex != 0):
+                self.driver.find_element(By.XPATH, "//input[@aria-label='Add row']").click()
+            time.sleep(OP_WAIT)
+            row_item = self.driver.find_element(
+                By.XPATH, "//input[@data-initial-value='Row " + str(ndex + 1) + "']")
+            row_item.click()
+            time.sleep(OP_WAIT)
+            row_item.clear()
+            time.sleep(OP_WAIT)
+            row_item.send_keys(str(row))
+        for ndex, col in enumerate(columns):
+            time.sleep(OP_WAIT)
+            if(ndex != 0):
+                self.driver.find_element(By.XPATH, "//input[@aria-label='Add column']").click()
+            time.sleep(OP_WAIT)
+            col_item = self.driver.find_element(
+                By.XPATH, "//input[@data-initial-value='Column " + str(ndex + 1) + "']")
+            col_item.click()
+            time.sleep(OP_WAIT)
+            col_item.clear()
+            time.sleep(OP_WAIT)
+            col_item.send_keys(str(col))
+        return
 
     def set_linear_scale(self, bottom, top, bottom_label="", top_label=""):
+        assert self.type == QuestionType.LINEAR_SCALE
+        assert isinstance(bottom, int)
+        assert isinstance(top, int)
         assert bottom == 0 or bottom == 1
         assert top > 1 and top < 11
         assert isinstance(bottom_label, str)
@@ -131,7 +165,6 @@ class Section:
         else:
             self.questions[max(self.questions.keys()) + 1] = Question(self.driver,
                                                                       max(self.questions.keys()) + 1, self, QuestionType.MULTIPLE_CHOICE)
-        print("ADDING QUESTION", max(self.questions.keys()))
         return
 
     def count_previous(self):
@@ -141,7 +174,6 @@ class Section:
                 pre += self.parent.questions_per[q_index]
             else:
                 break
-        print("QINDEX, PREV, COUNT", self.index, pre)
         return pre
 
     def delete_question(self, index):
@@ -261,13 +293,13 @@ if __name__ == '__main__':
     TESTFORM = GForm("***REMOVED***", "***REMOVED***")
     TESTFORM.load_blank_template("NICE MEME", "this is a test")
     TESTFORM.sections[0].add_question()  # add question to Sec1
-    TESTFORM.sections[0].questions[0].set_multiple_choices(["optiona", "optionb", "optionc"])
-    TESTFORM.sections[0].add_question()  # add question to Sec1
-    TESTFORM.sections[0].questions[1].change_question_type(QuestionType.LINEAR_SCALE)
-    TESTFORM.sections[0].questions[1].set_linear_scale(1, 10, "not at all", "yes, totally")
-    TESTFORM.sections[0].add_question()
-    TESTFORM.sections[0].questions[1].change_question_type(QuestionType.MULTIPLE_CHOICE_GRID)
-    TESTFORM.sections[0].questions[1].set_grid_choices(
+    # TESTFORM.sections[0].questions[0].set_multiple_choices(["optiona", "optionb", "optionc"])
+    # TESTFORM.sections[0].add_question()  # add question to Sec1
+    # TESTFORM.sections[0].questions[1].change_question_type(QuestionType.LINEAR_SCALE)
+    # TESTFORM.sections[0].questions[1].set_linear_scale(1, 10, "not at all", "yes, totally")
+    # TESTFORM.sections[0].add_question()
+    TESTFORM.sections[0].questions[0].change_question_type(QuestionType.MULTIPLE_CHOICE_GRID)
+    TESTFORM.sections[0].questions[0].set_grid_choices(
         ["1", "2", "3", "4", "5"], ["1", "2", "3", "4", "5"])
-    time.sleep(10)
-    TESTFORM.quit()
+    # time.sleep(10)
+    # TESTFORM.quit()
