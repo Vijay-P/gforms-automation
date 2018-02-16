@@ -11,14 +11,13 @@ Currently supports all essential functions.
 - Requiring responses
 - Removing question options
   - Note: reset is supported, so this isn't really necessary.
-- Inserting images
-- Settings
+- Getting Links
 
 ### NOT TO BE SUPPORTED EVER:
 - Changing document folder
 - Adding video
+- Inserting images
 - Changing form settings
 - Changing color palette
 - Preview
-- Anything under the "More" dropdown
 - Changing settings
