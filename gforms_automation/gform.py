@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 DRIVER = webdriver.Chrome()
-OP_WAIT = 0.5
+OP_WAIT = 0.75
 
 
 class QuestionType(Enum):
@@ -298,7 +298,7 @@ class GForm:
         self.__waitfor(By.CLASS_NAME, "docs-homescreen-templates-templateview-showcase", self.TIMEOUT)
         return
 
-    def edit_title(self, title):
+    def _edit_title(self, title):
         '''Edit the title of the form
 
         Keyword arguments:
@@ -310,7 +310,7 @@ class GForm:
         form_title.send_keys(title)
         return
 
-    def edit_description(self, description):
+    def _edit_description(self, description):
         '''Edit the description of the form
 
         Keyword arguments:
@@ -336,14 +336,19 @@ class GForm:
         DRIVER.find_elements_by_class_name(
             "freebirdFormeditorViewItemcardRoot")[0].click()
         DRIVER.find_elements(By.XPATH, "//div[@data-tooltip='Delete']")[0].click()
-        self.edit_title(title)
-        self.edit_description(description)
+        self._edit_title(title)
+        self._edit_description(description)
         self.sections[0] = Section(0, self)
         self.questions_per[0] = 0
         return
 
-    def add_section(self):
-        '''Add a section to the form'''
+    def add_section(self, title, description=""):
+        '''Add a section to the form
+
+        Keyword arguments:
+        title -- title for the new section
+        description -- description for the new section
+        '''
         time.sleep(OP_WAIT)
         if self.questions_per[max(self.sections.keys())] > 0:
             s_prev = self.sections[max(self.sections.keys())].count_previous()
@@ -356,6 +361,18 @@ class GForm:
         DRIVER.find_element(By.XPATH, "//div[@data-tooltip='Add section']").click()
         self.sections[max(self.sections.keys()) + 1] = Section(max(self.sections.keys()) + 1, self)
         self.questions_per[max(self.sections.keys())] = 0
+        time.sleep(OP_WAIT)
+        sec_title = DRIVER.find_element(
+            By.XPATH, "//textarea[@data-initial-value='Untitled Section']")
+        sec_title.click()
+        sec_title.clear()
+        sec_title.send_keys(title)
+        time.sleep(OP_WAIT)
+        sec_descr = DRIVER.find_elements(
+            By.XPATH, "//textarea[@aria-label='Description (optional)']")[max(self.sections.keys()) - 1]
+        sec_descr.click()
+        sec_descr.clear()
+        sec_descr.send_keys(description)
         return
 
     def delete_section(self, index):
